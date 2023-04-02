@@ -3,7 +3,13 @@
 
 import json
 import sys
-import jsonschema
+from marshmallow import Schema, fields, ValidationError
+
+
+class Wor(Schema):
+    name = fields.Str()
+    num = fields.Integer()
+    br = fields.Integer()
 
 
 def add(pep):
@@ -22,51 +28,51 @@ def add(pep):
     # Добавить словарь в список.
     pep.append(chel)
     # Отсортировать список в случае необходимости.
-    if len(pep) > 1:
-        pep.sort(key=lambda item: item.get('br', ''))
+    '''if len(pep) > 1:
+        pep.sort(key=lambda item: item.get('br', ''))'''
     return pep
 
 
 def li(pep):
     line = '+-{}-+-{}-+-{}-+-{}-+'.format(
-                '-' * 4,
-                '-' * 30,
-                '-' * 20,
-                '-' * 8
-            )
+        '-' * 4,
+        '-' * 30,
+        '-' * 20,
+        '-' * 8
+    )
     print(line)
     print(
-          '| {:^4} | {:^30} | {:^20} | {:^8} |'.format(
-              "№",
-              "F.I.O.",
-              "NUMBER",
-              "BRDAY"
-          )
-     )
+        '| {:^4} | {:^30} | {:^20} | {:^8} |'.format(
+            "№",
+            "F.I.O.",
+            "NUMBER",
+            "BRDAY"
+        )
+    )
     print(line)
     for idx, chel in enumerate(pep, 1):
         print(
-             '| {:>4} | {:<30} | {:<20} | {:>8} |'.format(
-                 idx,
-                 chel.get('name', ''),
-                 chel.get('num', ''),
-                 chel.get('br', 0)
-             )
+            '| {:>4} | {:<30} | {:<20} | {:>8} |'.format(
+                idx,
+                chel.get('name', ''),
+                chel.get('num', ''),
+                chel.get('br', 0)
+            )
         )
         print(line)
 
 
 def sel(pep):
-    #Получить требуемый стаж.
+    # Получить требуемый стаж.
     zapros = int(input("zapros po numeru  "))
-    #Инициализировать счетчик.
+    # Инициализировать счетчик.
     count = 0
-    #Проверить сведения работников из списка.
+    # Проверить сведения работников из списка.
     for chel in pep:
         if chel.get('num') == zapros:
             count += 1
             print(
-                 '{:>4}: {}'.format(count, chel.get('name', ''))
+                '{:>4}: {}'.format(count, chel.get('name', ''))
             )
 
     # Если счетчик равен 0, то работники не найдены.
@@ -75,9 +81,6 @@ def sel(pep):
 
 
 def save_workers(file_name, staff):
-    """
-    Сохранить всех работников в файл JSON.
-    """
     # Открыть файл с заданным именем для записи.
     with open(file_name, "w", encoding="utf-8") as fout:
         # Выполнить сериализацию данных в формат JSON.
@@ -86,39 +89,15 @@ def save_workers(file_name, staff):
 
 
 def load_workers(file_name):
-    schema = {
-      "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "num": {
-              "type": "integer"
-            },
-            "br": {
-              "type": "integer"
-            }
-          },
-          "required": [
-            "name",
-            "num",
-            "br"
-          ]
-        }
-      ]
-    }
     with open(file_name, "r", encoding="utf-8") as fin:
         loadfile = json.load(fin)
-        validator = jsonschema.Draft7Validator(schema)
         try:
-            if not validator.validate(loadfile):
-                print("валидация успешна")
-        except jsonschema.exceptions.ValidationError:
-            print("ошибка валидации", file=sys.stderr)
-            exit()
+            p = Wor().load(loadfile, many=True)
+            print("валидация успешна")
+            return p
+        except ValidationError as err:
+            print(err)
+            #exit()
 
 
 if __name__ == '__main__':

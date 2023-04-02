@@ -3,8 +3,13 @@
 
 import json
 import sys
-import jsonschema
+from pydantic import BaseModel, ValidationError, validator
 
+
+class Wor(BaseModel):
+    name: str
+    num: int
+    br: int
 
 def add(pep):
     # Запросить данные о работнике.
@@ -29,29 +34,29 @@ def add(pep):
 
 def li(pep):
     line = '+-{}-+-{}-+-{}-+-{}-+'.format(
-                '-' * 4,
-                '-' * 30,
-                '-' * 20,
-                '-' * 8
-            )
+        '-' * 4,
+        '-' * 30,
+        '-' * 20,
+        '-' * 8
+    )
     print(line)
     print(
-          '| {:^4} | {:^30} | {:^20} | {:^8} |'.format(
-              "№",
-              "F.I.O.",
-              "NUMBER",
-              "BRDAY"
-          )
-     )
+        '| {:^4} | {:^30} | {:^20} | {:^8} |'.format(
+            "№",
+            "F.I.O.",
+            "NUMBER",
+            "BRDAY"
+        )
+    )
     print(line)
     for idx, chel in enumerate(pep, 1):
         print(
-             '| {:>4} | {:<30} | {:<20} | {:>8} |'.format(
-                 idx,
-                 chel.get('name', ''),
-                 chel.get('num', ''),
-                 chel.get('br', 0)
-             )
+            '| {:>4} | {:<30} | {:<20} | {:>8} |'.format(
+                idx,
+                chel.get('name', ''),
+                chel.get('num', ''),
+                chel.get('br', 0)
+            )
         )
         print(line)
 
@@ -86,38 +91,17 @@ def save_workers(file_name, staff):
 
 
 def load_workers(file_name):
-    schema = {
-      "type": "array",
-      "items": [
-        {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "num": {
-              "type": "integer"
-            },
-            "br": {
-              "type": "integer"
-            }
-          },
-          "required": [
-            "name",
-            "num",
-            "br"
-          ]
-        }
-      ]
-    }
     with open(file_name, "r", encoding="utf-8") as fin:
-        loadfile = json.load(fin)
-        validator = jsonschema.Draft7Validator(schema)
+        loadfile = json.loads(fin.read())
         try:
-            if not validator.validate(loadfile):
-                print("валидация успешна")
-        except jsonschema.exceptions.ValidationError:
-            print("ошибка валидации", file=sys.stderr)
+            for i in loadfile:
+                Wor.parse_raw(str(i).replace("'", '"'))
+            print("валидация успешна")
+            return loadfile
+
+        except ValidationError as err:
+            print("error")
+            print(err)
             exit()
 
 
